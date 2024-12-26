@@ -73,7 +73,7 @@ async def sync_words_to_eudic():
     """Sync all the word samples to Eudic."""
     client = eudic_client.get_client()
     if not client:
-        raise error_codes.EUDIC_NOT_CONFIGURED.format("Eudic access key not configured")
+        raise Exception("Eudic access key not configured")
         
     all_words = get_word_store().all()
     
