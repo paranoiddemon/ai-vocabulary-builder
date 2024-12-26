@@ -75,28 +75,30 @@ async def sync_words_to_eudic():
     if not client:
         raise error_codes.EUDIC_NOT_CONFIGURED.format("Eudic access key not configured")
         
-    words = get_word_store().all()
+    all_words = get_word_store().all()
     
+    old_words = set(map(lambda w: w["word"], client.get_study_list_words()))
+    print(old_words)
+
     results = []
-    for word in words:
+    for w in all_words:
         try:
+            word = w.ws
+            print(word.word)
+            if word.word in old_words:
+                continue
             note = f"{word.orig_text} / {word.translated_text}"
-            await client.get_word_note(word.word)
+            client.add_word_note(word.word, note)
+            client.add_words_to_study_list([word.word])
             results.append({
                 "word": word.word,
-                "status": "success"
             })
         except Exception as e:
-            results.append({
-                "word": word.word, 
-                "status": "failed",
-                "error": str(e)
-            })
+            print(e)
             
     return {
         "results": results,
-        "total": len(words),
-        "success": len([r for r in results if r["status"] == "success"])
+        "success": len(results),
     }
 
 

@@ -1,8 +1,11 @@
 from typing import Optional
-import httpx
+import os
+import requests
 
 EUDIC_BASE = "https://api.frdic.com"
-ACCESS_KEY: Optional[str] = None
+ACCESS_KEY: Optional[str] = os.getenv("EUDIC_ACCESS_KEY")
+STUDY_LIST_ID: Optional[str] = os.getenv("STUDY_LIST_ID")
+
 
 class EudicClient:
     """Client for interacting with Eudic API."""
@@ -11,11 +14,12 @@ class EudicClient:
         """Initialize the client with access key."""
         self.access_key = access_key
         self.headers = {
-            "Authorization": f"{access_key}",
-            "Host": "api.frdic.com"
+            "Authorization": access_key,
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
         }
 
-    async def get_word_note(self, word: str, language: str = "en") -> dict:
+    def get_word_note(self, word: str, language: str = "en") -> dict:
         """Get word note from Eudic API.
         
         Args:
@@ -25,36 +29,31 @@ class EudicClient:
         Returns:
             API response as dict
         """
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{EUDIC_BASE}/api/open/v1/studylist/note",
-                params={"language": language, "word": word},
-                headers=self.headers
-            )
-            response.raise_for_status()
-            return response.json()
+        response = requests.get(
+            f"{EUDIC_BASE}/api/open/v1/studylist/note",
+            params={"language": language, "word": word},
+            headers=self.headers
+        )
+        response.raise_for_status()
+        return response.json()
 
-    async def get_study_list_words(self, list_id: str, word: str, language: str = "en") -> dict:
-        """Get words from a specific study list.
-        
-        Args:
-            list_id: The ID of the study list
-            word: The word to look up
-            language: Language code, defaults to "en" for English
-            
-        Returns:
-            API response as dict
-        """
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
+    def get_study_list_words(self, list_id: str = STUDY_LIST_ID, language: str = "en") -> dict:
+        """Get words from a specific study list."""
+        try:
+            response = requests.get(
                 f"{EUDIC_BASE}/api/open/v1/studylist/words/{list_id}",
-                params={"language": language, "word": word},
+                params={"language": language},
                 headers=self.headers
             )
+            
             response.raise_for_status()
-            return response.json()
+            return response.json()["data"]
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP Error: {str(e)}")
+            print(f"Response content: {e.response.text if hasattr(e, 'response') else 'No response'}")
+            raise
 
-    async def add_words_to_study_list(self, list_id: str, words: list[str], language: str = "en") -> dict:
+    def add_words_to_study_list(self, words: list[str], list_id: str = STUDY_LIST_ID, language: str = "en") -> dict:
         """Add words to a study list.
         
         Args:
@@ -65,21 +64,24 @@ class EudicClient:
         Returns:
             API response as dict
         """
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{EUDIC_BASE}/api/open/v1/studylist/words",
-                params={"language": language},
-                headers=self.headers,
-                json={
-                    "id": list_id,
-                    "language": language,
-                    "words": words
-                }
-            )
-            response.raise_for_status()
-            return response.json()
+        json={
+            "id": list_id,
+            "language": language,
+            "words": words
+        }
+        print(json)
+        response = requests.post(
+            f"{EUDIC_BASE}/api/open/v1/studylist/words",
+            params={"language": language},
+            headers=self.headers,
+            json=json
+        )
+        print(response.status_code)
+        response.raise_for_status()
+        print(response.json())
+        return response.json()
 
-    async def add_word_note(self, word: str, note: str, language: str = "en") -> dict:
+    def add_word_note(self, word: str, note: str, language: str = "en") -> dict:
         """Add a note to a word.
         
         Args:
@@ -90,27 +92,28 @@ class EudicClient:
         Returns:
             API response as dict
         """
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{EUDIC_BASE}/api/open/v1/studylist/note",
-                params={"language": language, "word": word},
-                headers=self.headers,
-                json={
-                    "word": word,
-                    "language": language,
-                    "note": note
-                }
-            )
-            response.raise_for_status()
-            return response.json()
-
-def set_access_key(key: str):
-    """Set the global access key for Eudic API."""
-    global ACCESS_KEY
-    ACCESS_KEY = key
+        response = requests.post(
+            f"{EUDIC_BASE}/api/open/v1/studylist/note",
+            params={"language": language, "word": word},
+            headers=self.headers,
+            json={
+                "word": word,
+                "language": language,
+                "note": note
+            }
+        )
+        response.raise_for_status()
+        return response.json()
 
 def get_client() -> Optional[EudicClient]:
     """Get an initialized Eudic client if access key is set."""
     if not ACCESS_KEY:
         return None
+    if not STUDY_LIST_ID:
+        return None
     return EudicClient(ACCESS_KEY)
+
+
+# client = get_client()
+# print(client.get_study_list_words())
+# client.add_words_to_study_list(["hello"])

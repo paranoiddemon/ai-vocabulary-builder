@@ -86,9 +86,10 @@ function exportWords() {
 // Method to handle export
 async function syncToEudic() {
   try {
-		await axios.post(window.API_ENDPOINT + '/api/word_samples/sync/')
+		const resp = await axios.post(window.API_ENDPOINT + '/api/word_samples/sync/')
+		notyf.success(resp.data.success + ' words has been added');
 	} catch (error) {
-		const msg = error.resposne ? error.response.data.message : error.message
+		const msg = error.response ? error.response.data.message : error.message
 		notyf.error('Error requesting API: ' + msg)
 		return
 	}
@@ -117,7 +118,7 @@ async function syncToEudic() {
 					<table class="table table-striped words-list mt-3" v-if="words.length > 0">
 						<colgroup>
 							<col span="1" style="width: 140px" />
-							<col span="1" />
+							<col span="1" />a
 							<col span="1" />
 							<col span="1" style="width: 100px" />
 						</colgroup>
