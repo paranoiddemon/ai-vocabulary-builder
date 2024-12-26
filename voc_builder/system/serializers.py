@@ -12,6 +12,7 @@ class SettingsInput(BaseModel):
 
     target_language: str
     model_provider: str
+    eudic_access_key: str
     openai_config: Dict[str, Any]
     gemini_config: Dict[str, Any]
     anthropic_config: Dict[str, Any]

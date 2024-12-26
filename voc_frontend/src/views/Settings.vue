@@ -22,7 +22,8 @@ const settings = reactive({
 		api_key: "",
 		api_host: "",
 		model: ""
-	}
+	},
+	eudic_access_key: ""
 })
 
 // All available model options
@@ -50,6 +51,11 @@ const toggleAnthropicApiKeyVisibility = () => {
 	showAnthropicApiKey.value = !showAnthropicApiKey.value;
 };
 
+const showEudicApiKey = ref(false)
+
+const toggleEudicApiKeyVisibility = () => {
+	showEudicApiKey.value = !showEudicApiKey.value
+}
 
 onMounted(() => {
 	loadSettings()
@@ -189,6 +195,31 @@ const handleSubmit = async (event: Event) => {
 						<select name="anthropic_model" class="form-select" v-model="settings.anthropic_config.model">
 							<option v-for="o of modelOptions.anthropic" :key="o" :value="o">{{ o }}</option>
 						</select>
+					</div>
+				</div>
+
+				<h5 class="mt-4">Integrations</h5>
+				<div class="mb-3">
+					<label for="eudic_access_key" class="form-label">Eudic Access Key</label>
+					<div class="input-group">
+						<input 
+							:type="showEudicApiKey ? 'text' : 'password'" 
+							class="form-control" 
+							id="eudic_access_key" 
+							name="eudic_access_key" 
+							v-model="settings.eudic_access_key" 
+							placeholder=""
+						>
+						<button 
+							type="button" 
+							class="btn btn-outline-secondary" 
+							@click="toggleEudicApiKeyVisibility"
+						>
+							{{ showEudicApiKey ? 'Hide' : 'Show' }}
+						</button>
+					</div>
+					<div class="form-text">
+						Optional. Used for syncing vocabulary with Eudic.
 					</div>
 				</div>
 

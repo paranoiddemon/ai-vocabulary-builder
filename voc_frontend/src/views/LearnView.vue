@@ -83,6 +83,18 @@ function exportWords() {
 	window.open(window.API_ENDPOINT + '/api/word_samples/export/', '_blank')
 }
 
+// Method to handle export
+async function syncToEudic() {
+  try {
+		await axios.post(window.API_ENDPOINT + '/api/word_samples/sync/')
+	} catch (error) {
+		const msg = error.resposne ? error.response.data.message : error.message
+		notyf.error('Error requesting API: ' + msg)
+		return
+	}
+}
+
+
 </script>
 
 <template>
@@ -99,6 +111,7 @@ function exportWords() {
 						<span>You've added <strong>{{ count }}</strong> words so far, keep going!</span>
 					</div>
 					<div class="d-flex justify-content-end mt-3 mb-2">
+						<button class="btn btn-sm btn-primary me-2" @click="syncToEudic">Sync to Eudic</button>
 						<button class="btn btn-sm btn-primary" @click="exportWords">Export (.csv)</button>
 					</div>
 					<table class="table table-striped words-list mt-3" v-if="words.length > 0">

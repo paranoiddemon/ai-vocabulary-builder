@@ -93,6 +93,7 @@ async def save_settings(settings_input: SettingsInput, response: Response):
 
     settings.target_language = settings_input.target_language
     settings.model_provider = settings_input.model_provider
+    settings.eudic_access_key = settings_input.eudic_access_key
     # Update the model settings only for the selected provider type, validate the input
     # by pydantic models.
     if settings_input.model_provider == ModelProvider.OPENAI.value:

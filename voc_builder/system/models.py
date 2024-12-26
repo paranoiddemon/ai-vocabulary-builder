@@ -42,6 +42,7 @@ class SystemSettings:
 
     anthropic_config: Optional[AnthropicConfig] = None
     target_language: str = ""
+    eudic_access_key: str = ""
 
     def __post_init__(self):
         if self.anthropic_config is None:

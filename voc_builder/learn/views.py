@@ -17,6 +17,7 @@ from voc_builder.misc.export import VocCSVWriter
 
 from .ai_svc import get_story
 from .serializers import DeleteMasteredWordsInput
+from . import eudic_client
 
 router = APIRouter()
 
@@ -66,6 +67,37 @@ def export_words():
     filename = now.strftime("ai_vov_words_%Y%m%d_%H%M.csv")
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return StreamingResponse(fp, headers=headers)
+
+@router.post("/api/word_samples/sync/")
+async def sync_words_to_eudic():
+    """Sync all the word samples to Eudic."""
+    client = eudic_client.get_client()
+    if not client:
+        raise error_codes.EUDIC_NOT_CONFIGURED.format("Eudic access key not configured")
+        
+    words = get_word_store().all()
+    
+    results = []
+    for word in words:
+        try:
+            note = f"{word.orig_text} / {word.translated_text}"
+            await client.get_word_note(word.word)
+            results.append({
+                "word": word.word,
+                "status": "success"
+            })
+        except Exception as e:
+            results.append({
+                "word": word.word, 
+                "status": "failed",
+                "error": str(e)
+            })
+            
+    return {
+        "results": results,
+        "total": len(words),
+        "success": len([r for r in results if r["status"] == "success"])
+    }
 
 
 @router.get("/api/mastered_words/")

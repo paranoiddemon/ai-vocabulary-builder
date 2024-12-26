@@ -43,3 +43,9 @@ async def api_error_exception_handler(request: Request, exc: APIError):
         status_code=exc.status_code,
         content={"code": exc.code, "message": exc.message, "data": exc.data},
     )
+
+
+EUDIC_NOT_CONFIGURED = APIError(
+    "EUDIC_NOT_CONFIGURED", 
+    "Eudic integration is not properly configured: {0}"
+)
